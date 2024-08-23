@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Platform, View, TextInput, Text } from "react-native";
+import {
+  StyleSheet,
+  Platform,
+  View,
+  TextInput,
+  Text,
+  SafeAreaView,
+  FlatList,
+  TouchableHighlight,
+} from "react-native";
 import * as Contacts from "expo-contacts";
-import * as Permissions from "expo-permissions";
 import { contactsContainer, contactType } from "@/types";
 export default function HomeScreen() {
   let contactContainer: contactType = [];
   const [contacts, setContacts] = useState(contactContainer);
+  const [searchText, setSearchText] = useState("");
 
   const requestPermissions = async () => {
     const { status } = await Contacts.requestPermissionsAsync();
@@ -16,30 +25,15 @@ export default function HomeScreen() {
     }
   };
 
-  // Function to load contacts
   const loadContacts = async () => {
     const { data }: contactsContainer = await Contacts.getContactsAsync();
     if (data.length > 0) {
-      let additionalContacts: contactType = [
-        {
-          contactType: "person",
-          firstName: "Mi",
-          id: "885",
-          imageAvailable: false,
-          lastName: "Amor",
-          lookupKey:
-            "1885r714-4E2C4644363A40324C2A30322C32.3789r715-4E2C4644363A40324C2A30322C32",
-          name: "Mi Amor",
-          phoneNumbers: [
-            {
-              id: "2305",
-              isPrimary: 0,
-              label: "mobile",
-              number: "+27658808334",
-              type: "2",
-            },
-          ],
-        },
+      let alphabets: string[] = [];
+      let alphabetsString: string = "abcdefghijklmnopqrstuvwxyz";
+      let newContacts = [
+        ...data.filter((item) =>
+          alphabetsString.includes(item.name[0].toLowerCase())
+        ),
         {
           contactType: "person",
           firstName: "Ndoda",
@@ -59,27 +53,60 @@ export default function HomeScreen() {
             },
           ],
         },
-      ];
-      let alphabets: string[] = [];
-      let alphabetsString: string = "abcdefghijklmnopqrstuvwxyz";
-      setContacts(
-        [
-          ...data.filter((item) =>
-            alphabetsString.includes(item.name[0].toLowerCase())
-          ),
-          ...additionalContacts,
-        ]
-          .sort((a, b) =>
-            a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-          )
-          .map((item) => {
-            if (!alphabets.includes(item.name[0])) {
-              alphabets.push(item.name[0]);
-              item.first = true;
-            }
-            return item;
-          })
-      );
+        {
+          contactType: "person",
+          firstName: "Mi",
+          id: "885",
+          imageAvailable: false,
+          lastName: "Amor",
+          lookupKey:
+            "1885r714-4E2C4644363A40324C2A30322C32.3789r715-4E2C4644363A40324C2A30322C32",
+          name: "Mi Amor",
+          phoneNumbers: [
+            {
+              id: "2305",
+              isPrimary: 0,
+              label: "mobile",
+              number: "+27658808334",
+              type: "2",
+            },
+          ],
+        },
+      ]
+        .sort((a, b) =>
+          a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+        )
+        .reduce((arr, item) => {
+          item.name = item.name[0].toUpperCase() + item.name.slice(1);
+          if (!alphabets.includes(item.name[0])) {
+            alphabets.push(item.name[0].toUpperCase());
+            item.first = true;
+          }
+          item.style = getRandomColor().contactIcon;
+
+          if (!arr.find((curr: any) => curr.name === item.name)) {
+            arr.push(item);
+          }
+          return arr;
+        }, []);
+      setContacts(newContacts);
+    }
+  };
+
+  const handleContactPress = async (name: string) => {
+    let email: string;
+    let password: string;
+    switch (name) {
+      case "Ndoda Yami":
+        email = "tseholoba2@gmail.com";
+        password = "Tyro11";
+        break;
+      case "Mi Amor":
+        email = "Sbongile@gmail.com";
+        password = "MiAmor";
+        break;
+      default:
+        break;
     }
   };
 
@@ -90,24 +117,83 @@ export default function HomeScreen() {
   return (
     <View style={styles.homepage}>
       <View style={styles.container}>
-        <TextInput style={styles.search} placeholder="Search Contacts" />
+        <TextInput
+          style={styles.search}
+          placeholder="Search Contacts"
+          onChangeText={(text) => setSearchText(text)}
+        />
       </View>
       <View>
-        {contacts.map((contact, index) => (
-          <View key={index} style={styles.contactRow}>
-            <Text style={styles.firstLetter}>
-              {contact.first ? contact.name[0] : ""}
-            </Text>
-            <Text style={styles.contactIcon}>{contact.name[0]}</Text>
-            <Text>{contact.name}</Text>
-          </View>
-        ))}
+        <SafeAreaView>
+          <FlatList
+            data={contacts.reduce((arr, item) => {
+              if (
+                !arr.find((curr: any) => curr.firstName === item.firstName) &&
+                item.name.includes(searchText)
+              ) {
+                arr.push(item);
+              }
+              return arr;
+            }, [])}
+            renderItem={(item: any) => {
+              let contact = item.item;
+              return (
+                <TouchableHighlight
+                  activeOpacity={0.6}
+                  underlayColor="#DDDDDD"
+                  onPress={() => alert(contact.name)}
+                >
+                  <View>
+                    {contact?.first ? (
+                      <View>
+                        <Text style={styles.firstLetter}>
+                          {contact.name[0]}
+                        </Text>
+                      </View>
+                    ) : (
+                      <></>
+                    )}
+                    <View style={styles.contactRow}>
+                      <Text style={contact.style}>{contact.name?.at(0)}</Text>
+                      <Text>{contact.name}</Text>
+                    </View>
+                  </View>
+                </TouchableHighlight>
+              );
+            }}
+          />
+        </SafeAreaView>
       </View>
     </View>
   );
 }
 
+function getRandomColor() {
+  const colorPanel = ["#d9b99b", "#00674F", "#000", "#EADDCA"];
+  let circleSize = 40;
+  return StyleSheet.create({
+    contactIcon: {
+      margin: 10,
+      backgroundColor:
+        colorPanel[Math.floor(Math.random() * colorPanel.length)],
+      color: "#fff",
+      height: circleSize,
+      width: circleSize,
+      borderRadius: 50,
+      textAlignVertical: "center",
+      textAlign: "center",
+      fontSize: 20,
+    },
+  });
+}
 const styles = StyleSheet.create({
+  contactRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    marginLeft: 15,
+  },
+
   container: {
     padding: 20,
   },
@@ -135,13 +221,5 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-  },
-  contactRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  contactIcon: {
-    margin: 10,
   },
 });
