@@ -3,7 +3,7 @@ import { GiftedChat, Bubble } from "react-native-gifted-chat";
 import { firebase } from "../firebaseConfig";
 import { userType } from "@/types";
 import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
-import { HelloWave } from "@/components/HelloWave";
+import { Audio } from "expo-av";
 
 function renderBubble(props: any) {
   return (
@@ -36,20 +36,32 @@ const ChatScreen = () => {
   const [typingMessage, setTypingMessage] = useState("");
   const [imTyping, setImTyping] = useState(false);
   const [typingId, setTypingId] = useState("");
+
+  let user: userType = {
+    _id: firebase?.auth()?.currentUser?.uid,
+    name: firebase?.auth()?.currentUser?.email,
+  };
+
   useEffect(() => {
     const unsubscribe = firebase
       .firestore()
       .collection("chats")
       .orderBy("createdAt", "desc")
       .onSnapshot((snapshot) => {
-        setMessages(
-          snapshot.docs.map((doc) => ({
-            _id: doc.id,
-            text: doc.data().text,
-            createdAt: doc.data().createdAt.toDate(),
-            user: doc.data().user,
-          }))
-        );
+        let newMessages = snapshot.docs.map((doc) => ({
+          _id: doc.id,
+          text: doc.data().text,
+          createdAt: doc.data().createdAt.toDate(),
+          user: doc.data().user,
+        }));
+        let shouldPlayNotification =
+          newMessages.filter((item) => item.user._id !== user._id).length !==
+          messages.filter((item) => item.user._id !== user._id).length;
+
+        if(shouldPlayNotification){
+          playSound();
+        }
+        setMessages(newMessages);
         setLoading(false);
       });
 
@@ -79,6 +91,13 @@ const ChatScreen = () => {
     };
   }, []);
 
+  const playSound = async () => {
+    const { sound } = await Audio.Sound.createAsync(
+      require("../assets/sounds/notification.mp3") // Local file
+    );
+    sound.setVolumeAsync(0.1);
+    await sound.playAsync();
+  };
   const sendTypingStatus = async (text: string) => {
     try {
       if (text.length) {
@@ -114,10 +133,7 @@ const ChatScreen = () => {
       user,
     });
   }, []);
-  let user: userType = {
-    _id: firebase?.auth()?.currentUser?.uid,
-    name: firebase?.auth()?.currentUser?.email,
-  };
+
   let showTyping = isTyping && isTyping !== typingId;
   return (
     <View style={styles.container}>
