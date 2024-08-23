@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { GiftedChat, Bubble } from "react-native-gifted-chat";
 import { firebase } from "../firebaseConfig";
 import { userType } from "@/types";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 
 function renderBubble(props: any) {
   return (
@@ -31,6 +31,7 @@ function renderBubble(props: any) {
 const ChatScreen = () => {
   let messageType: any[] = [];
   const [messages, setMessages] = useState(messageType);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = firebase
@@ -46,6 +47,7 @@ const ChatScreen = () => {
             user: doc.data().user,
           }))
         );
+        setLoading(false);
       });
     return () => unsubscribe();
   }, []);
@@ -66,12 +68,18 @@ const ChatScreen = () => {
 
   return (
     <View style={styles.container}>
-      <GiftedChat
-        messages={messages}
-        renderBubble={renderBubble}
-        onSend={(messages) => onSend(messages)}
-        user={user}
-      />
+      {loading ? (
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <GiftedChat
+          messages={messages}
+          renderBubble={renderBubble}
+          onSend={(messages) => onSend(messages)}
+          user={user}
+        />
+      )}
     </View>
   );
 };
@@ -80,6 +88,12 @@ let styles = StyleSheet.create({
   container: {
     height: "100%",
     backgroundColor: "#fff",
+  },
+  loader: {
+    flex: 1,
+    textAlignVertical: "center",
+    textAlign: "center",
+    alignItems: "center",
   },
 });
 

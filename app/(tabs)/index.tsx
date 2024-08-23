@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   FlatList,
   TouchableHighlight,
+  ActivityIndicator,
 } from "react-native";
 import * as Contacts from "expo-contacts";
 import { contactsContainer, contactType } from "@/types";
@@ -16,6 +17,7 @@ import { firebase } from "../../firebaseConfig";
 export default function HomeScreen() {
   let contactContainer: contactType = [];
   const [contacts, setContacts] = useState(contactContainer);
+  const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const navigation = useNavigation();
   const requestPermissions = async () => {
@@ -32,49 +34,8 @@ export default function HomeScreen() {
     if (data.length > 0) {
       let alphabets: string[] = [];
       let alphabetsString: string = "abcdefghijklmnopqrstuvwxyz";
-      let newContacts = [
-        ...data.filter((item) =>
-          alphabetsString.includes(item.name[0].toLowerCase())
-        ),
-        {
-          contactType: "person",
-          firstName: "Ndoda",
-          id: "886",
-          imageAvailable: false,
-          lastName: "Yami",
-          lookupKey:
-            "1885r714-4E2C4644363A40324C2A30322C32.3789r715-4E2C4644363A40324C2A30322C32",
-          name: "Ndoda Yami",
-          phoneNumbers: [
-            {
-              id: "2305",
-              isPrimary: 0,
-              label: "mobile",
-              number: "+27742019041",
-              type: "2",
-            },
-          ],
-        },
-        {
-          contactType: "person",
-          firstName: "Mi",
-          id: "885",
-          imageAvailable: false,
-          lastName: "Amor",
-          lookupKey:
-            "1885r714-4E2C4644363A40324C2A30322C32.3789r715-4E2C4644363A40324C2A30322C32",
-          name: "Mi Amor",
-          phoneNumbers: [
-            {
-              id: "2305",
-              isPrimary: 0,
-              label: "mobile",
-              number: "+27658808334",
-              type: "2",
-            },
-          ],
-        },
-      ]
+      let newContacts = data
+        .filter((item) => alphabetsString.includes(item.name[0].toLowerCase()))
         .sort((a, b) =>
           a.name.toLowerCase().localeCompare(b.name.toLowerCase())
         )
@@ -92,18 +53,19 @@ export default function HomeScreen() {
           return arr;
         }, []);
       setContacts(newContacts);
+      setLoading(false);
     }
   };
 
   const handleContactPress = async (name: string) => {
     let email: string = "";
     let password: string = "";
-    switch (name) {
-      case "Ndoda Yami":
+    switch (name.toLowerCase()) {
+      case "oleat":
         email = "Sbongile@gmail.com";
         password = "MiAmor";
         break;
-      case "Mi Amor":
+      case "mi amor":
         email = "tseholoba2@gmail.com";
         password = "Tyro11";
         break;
@@ -112,6 +74,7 @@ export default function HomeScreen() {
     }
 
     if (email.length > 0 && password.length > 0) {
+      setLoading(true);
       handleLogin(email, password);
     } else {
       alert(name);
@@ -122,8 +85,11 @@ export default function HomeScreen() {
     firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
-      .then(() => navigation.navigate("chatScreen"))
-      .catch((error) => alert(error.message));
+      .then(() => {
+        setLoading(false);
+        navigation.navigate("chatScreen");
+      })
+      .catch((error: any) => alert(error.message));
   };
 
   useEffect(() => {
@@ -141,43 +107,47 @@ export default function HomeScreen() {
       </View>
       <View>
         <SafeAreaView>
-          <FlatList
-            data={contacts.reduce((arr, item) => {
-              if (
-                !arr.find((curr: any) => curr.firstName === item.firstName) &&
-                item.name.includes(searchText)
-              ) {
-                arr.push(item);
-              }
-              return arr;
-            }, [])}
-            renderItem={(item: any) => {
-              let contact = item.item;
-              return (
-                <TouchableHighlight
-                  activeOpacity={0.6}
-                  underlayColor="#DDDDDD"
-                  onPress={() => handleContactPress(contact.name)}
-                >
-                  <View>
-                    {contact?.first ? (
-                      <View>
-                        <Text style={styles.firstLetter}>
-                          {contact.name[0]}
-                        </Text>
+          {loading ? (
+            <ActivityIndicator size="large" />
+          ) : (
+            <FlatList
+              data={contacts.reduce((arr, item) => {
+                if (
+                  !arr.find((curr: any) => curr.firstName === item.firstName) &&
+                  item.name.includes(searchText)
+                ) {
+                  arr.push(item);
+                }
+                return arr;
+              }, [])}
+              renderItem={(item: any) => {
+                let contact = item.item;
+                return (
+                  <TouchableHighlight
+                    activeOpacity={0.6}
+                    underlayColor="#DDDDDD"
+                    onPress={() => handleContactPress(contact.name)}
+                  >
+                    <View>
+                      {contact?.first ? (
+                        <View>
+                          <Text style={styles.firstLetter}>
+                            {contact.name[0]}
+                          </Text>
+                        </View>
+                      ) : (
+                        <></>
+                      )}
+                      <View style={styles.contactRow}>
+                        <Text style={contact.style}>{contact.name?.at(0)}</Text>
+                        <Text>{contact.name}</Text>
                       </View>
-                    ) : (
-                      <></>
-                    )}
-                    <View style={styles.contactRow}>
-                      <Text style={contact.style}>{contact.name?.at(0)}</Text>
-                      <Text>{contact.name}</Text>
                     </View>
-                  </View>
-                </TouchableHighlight>
-              );
-            }}
-          />
+                  </TouchableHighlight>
+                );
+              }}
+            />
+          )}
         </SafeAreaView>
       </View>
     </View>
@@ -220,7 +190,7 @@ const styles = StyleSheet.create({
   homepage: {
     height: "100%",
     paddingTop: Platform.OS === "android" ? 80 : 0,
-    backgroundColor:"#fff"
+    backgroundColor: "#fff",
   },
   heading: {
     fontSize: 30,

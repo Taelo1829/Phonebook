@@ -12,6 +12,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "sdkVersion": "51.0.0",
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
@@ -26,7 +27,8 @@
       "permissions": [
         "READ_CONTACTS",
         "WRITE_CONTACTS"
-      ]
+      ],
+      "package": "com.tyro1829.phonebook"
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +40,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "6a774d51-9462-42d6-8950-ef448cc52104"
+      }
     }
   }
 }
