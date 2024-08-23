@@ -39,7 +39,7 @@ export default function RootLayout() {
           options={{
             title: "💘Mi Amor💘 Him",
             headerStyle: {
-              backgroundColor: "#000",
+              backgroundColor: "#2596be",
             },
             headerTintColor: "#fff",
             headerTitleStyle: {
