@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
   homepage: {
     height: "100%",
     paddingTop: Platform.OS === "android" ? 80 : 0,
+    backgroundColor:"#fff"
   },
   heading: {
     fontSize: 30,
