@@ -11,11 +11,12 @@ import {
 } from "react-native";
 import * as Contacts from "expo-contacts";
 import { contactsContainer, contactType } from "@/types";
+import { useNavigation } from "@react-navigation/native";
 export default function HomeScreen() {
   let contactContainer: contactType = [];
   const [contacts, setContacts] = useState(contactContainer);
   const [searchText, setSearchText] = useState("");
-
+  const navigation = useNavigation();
   const requestPermissions = async () => {
     const { status } = await Contacts.requestPermissionsAsync();
     if (status === "granted") {
@@ -94,8 +95,8 @@ export default function HomeScreen() {
   };
 
   const handleContactPress = async (name: string) => {
-    let email: string;
-    let password: string;
+    let email: string = "";
+    let password: string = "";
     switch (name) {
       case "Ndoda Yami":
         email = "tseholoba2@gmail.com";
@@ -107,6 +108,12 @@ export default function HomeScreen() {
         break;
       default:
         break;
+    }
+
+    if (email.length > 0 && password.length > 0) {
+      navigation.navigate("chatScreen");
+    } else {
+      alert(name);
     }
   };
 
@@ -141,7 +148,7 @@ export default function HomeScreen() {
                 <TouchableHighlight
                   activeOpacity={0.6}
                   underlayColor="#DDDDDD"
-                  onPress={() => alert(contact.name)}
+                  onPress={() => handleContactPress(contact.name)}
                 >
                   <View>
                     {contact?.first ? (
