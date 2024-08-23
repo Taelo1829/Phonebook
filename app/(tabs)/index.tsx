@@ -12,6 +12,7 @@ import {
 import * as Contacts from "expo-contacts";
 import { contactsContainer, contactType } from "@/types";
 import { useNavigation } from "@react-navigation/native";
+import { firebase } from "../../firebaseConfig";
 export default function HomeScreen() {
   let contactContainer: contactType = [];
   const [contacts, setContacts] = useState(contactContainer);
@@ -111,10 +112,18 @@ export default function HomeScreen() {
     }
 
     if (email.length > 0 && password.length > 0) {
-      navigation.navigate("chatScreen");
+      handleLogin(email, password);
     } else {
       alert(name);
     }
+  };
+
+  const handleLogin = (email: string, password: string) => {
+    firebase
+      .auth()
+      .signInWithEmailAndPassword(email, password)
+      .then(() => navigation.navigate("chatScreen"))
+      .catch((error) => alert(error.message));
   };
 
   useEffect(() => {
