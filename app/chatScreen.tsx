@@ -56,9 +56,10 @@ const ChatScreen = () => {
         }));
         let shouldPlayNotification =
           newMessages.filter((item) => item.user._id !== user._id).length !==
-          messages.filter((item) => item.user._id !== user._id).length;
+            messages.filter((item) => item.user._id !== user._id).length &&
+          messages.length;
 
-        if(shouldPlayNotification){
+        if (shouldPlayNotification) {
           playSound();
         }
         setMessages(newMessages);
