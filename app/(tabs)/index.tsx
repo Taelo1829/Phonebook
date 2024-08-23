@@ -99,12 +99,12 @@ export default function HomeScreen() {
     let password: string = "";
     switch (name) {
       case "Ndoda Yami":
-        email = "tseholoba2@gmail.com";
-        password = "Tyro11";
-        break;
-      case "Mi Amor":
         email = "Sbongile@gmail.com";
         password = "MiAmor";
+        break;
+      case "Mi Amor":
+        email = "tseholoba2@gmail.com";
+        password = "Tyro11";
         break;
       default:
         break;
