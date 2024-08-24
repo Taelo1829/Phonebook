@@ -77,7 +77,10 @@ export default function HomeScreen() {
       setLoading(true);
       handleLogin(email, password);
     } else {
-      alert(name);
+      let contact = contacts.find((item) => item.name === name);
+      alert(
+        name + "\n" +contact?.phoneNumbers[0].number
+      );
     }
   };
 
@@ -88,6 +91,7 @@ export default function HomeScreen() {
       .then(() => {
         setLoading(false);
         navigation.navigate("chatScreen");
+        setSearchText("");
       })
       .catch((error: any) => alert(error.message));
   };
@@ -103,6 +107,7 @@ export default function HomeScreen() {
           style={styles.search}
           placeholder="Search Contacts"
           onChangeText={(text) => setSearchText(text)}
+          value={searchText}
         />
       </View>
       <View>

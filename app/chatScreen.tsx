@@ -2,10 +2,41 @@ import React, { useCallback, useEffect, useState } from "react";
 import { GiftedChat, Bubble } from "react-native-gifted-chat";
 import { firebase } from "../firebaseConfig";
 import { userType } from "@/types";
-import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
+import {
+  View,
+  StyleSheet,
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { Audio } from "expo-av";
+import AudioRecorder from "./AudioRecorder";
 
 function renderBubble(props: any) {
+  const { currentMessage } = props;
+
+  const playAudio = async (audioBase64: string) => {
+    try {
+      const soundObject = new Audio.Sound();
+      const uri = `${audioBase64}`;
+      await soundObject.loadAsync({ uri });
+      await soundObject.playAsync();
+    } catch (error) {
+      console.error("Error playing audio");
+    }
+  };
+
+  // Check if the current message has an audio property
+  if (currentMessage.audio) {
+    return (
+      <TouchableOpacity onPress={() => playAudio(currentMessage.audio)}>
+        <View style={styles.audioBubble}>
+          <Text style={styles.audioText}>Play Voice Note</Text>
+        </View>
+      </TouchableOpacity>
+    );
+  }
+
   return (
     <Bubble
       {...props}
@@ -51,13 +82,13 @@ const ChatScreen = () => {
         let newMessages = snapshot.docs.map((doc) => ({
           _id: doc.id,
           text: doc.data().text,
+          audio: doc.data().audio,
           createdAt: doc.data().createdAt.toDate(),
           user: doc.data().user,
         }));
         let shouldPlayNotification =
           newMessages.filter((item) => item.user._id !== user._id).length !==
-            messages.filter((item) => item.user._id !== user._id).length &&
-          messages.length;
+          messages.filter((item) => item.user._id !== user._id).length;
 
         if (shouldPlayNotification) {
           playSound();
@@ -92,9 +123,10 @@ const ChatScreen = () => {
     };
   }, []);
 
+  const handleAudioRecordComplete = (sound: any) => {};
   const playSound = async () => {
     const { sound } = await Audio.Sound.createAsync(
-      require("../assets/sounds/notification.mp3") // Local file
+      require("../assets/sounds/notification.mp3")
     );
     sound.setVolumeAsync(0.1);
     await sound.playAsync();
@@ -130,6 +162,7 @@ const ChatScreen = () => {
     firebase.firestore().collection("chats").add({
       _id,
       createdAt,
+      audio: "",
       text,
       user,
     });
@@ -151,7 +184,7 @@ const ChatScreen = () => {
           user={user}
         />
       )}
-
+      <AudioRecorder onRecordComplete={handleAudioRecordComplete} />
       {showTyping && (
         <View style={styles.typing}>
           <Text>{typingMessage}</Text>
@@ -177,6 +210,16 @@ let styles = StyleSheet.create({
   typing: {
     position: "absolute",
     top: 0,
+  },
+  audioBubble: {
+    padding: 10,
+    backgroundColor: "#0084ff",
+    borderRadius: 10,
+    maxWidth: 250,
+  },
+  audioText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 
